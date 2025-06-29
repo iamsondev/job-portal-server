@@ -45,13 +45,32 @@ async function run() {
     })
 
     // applications api
+    app.get('/applications', async(req, res) => {
+      const email = req.query.email;
+      const query = {
+        applicant : email
+      }
+      const result = await applicationsCollection.find().toArray()
+      // bad way to aggregate data
+      for(const application of result){
+        const id = application.id;
+        const jobQuery = {_id:new ObjectId(id)}
+        const job = await jobsCollection.findOne(jobQuery);
+        application.company = job.company
+        application.title = job.title
+        application.company_logo = job.company_logo
+      }
+
+      res.send(result);
+    })
+
     app.post('/applications', async(req, res) => {
       const application = req.body;
       console.log(application)
       const result = await applicationsCollection.insertOne(application)
       res.send(result);
 
-    })
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
